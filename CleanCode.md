@@ -297,3 +297,113 @@ public class GuessStatisticsMessage {
 - Likewise, say we invented a `MailingAddress` class in `GSD`'s accounting module, and we named it `GSDAccountAddress`. Later, we need a mailing address for our customer contact application. Do we use `GSDAcoountAddress` ?
 - Shorter names are generally better than longer ones. 
 - Add no more context to a name than is necessary
+
+
+
+## Functions
+
+- **The first rule of functions is that they should be small.**
+- **The second rule of functions is that they should be smaller than that.** 
+- Lines should not be 150 characters long.
+- Functions should not be 100 lines long.
+- Functions should hardly ever be 20 lines long
+
+Here is the example:
+
+```java
+// code 1
+public static String testableHtml(PageData pageData,boolean includeSuiteSetup) throws Exception {
+		WikiPage wikiPage = pageData.getWikiPage();
+		StringBuffer buffer = new StringBuffer();
+		if (pageData.hasAttribute("Test")) {
+			if (includeSuiteSetup) {
+				WikiPage suiteSetup = PageCrawlerImpl.getInheritedPage( SuiteResponder.SUITE_SETUP_NAME, wikiPage);
+		if (suiteSetup != null) {
+			WikiPagePath pagePath =
+			suiteSetup.getPageCrawler().getFullPath(suiteSetup);
+			String pagePathName = PathParser.render(pagePath);
+			buffer.append("!include -setup .").append(pagePathName).append("\n");
+		}
+	}
+	WikiPage setup = PageCrawlerImpl.getInheritedPage("SetUp", wikiPage);
+	if (setup != null) {
+		WikiPagePath setupPath = wikiPage.getPageCrawler().getFullPath(setup);
+		String setupPathName = PathParser.render(setupPath);
+		buffer.append("!include -setup .").append(setupPathName).append("\n");
+		}
+	}
+	buffer.append(pageData.getContent());
+	if (pageData.hasAttribute("Test")) {
+		WikiPage teardown = PageCrawlerImpl.getInheritedPage("TearDown", wikiPage);
+	if (teardown != null) {
+	 	WikiPagePath tearDownPath = wikiPage.getPageCrawler().getFullPath(teardown);
+		String tearDownPathName = PathParser.render(tearDownPath);
+		buffer.append("\n").append("!include -teardown .").append(tearDownPathName).append("\n");
+    }
+        // ... goes on
+    pageData.setContent(buffer.toString());
+	return pageData.getHtml();	
+}
+
+```
+
+- Here is the refactored view:
+
+```java
+// code 2
+public static String renderPageWithSetupsAndTeardowns(PageData pageData, boolean isSuite) throws Exception {
+	boolean isTestPage = pageData.hasAttribute("Test");
+	if (isTestPage) {
+		WikiPage testPage = pageData.getWikiPage();
+		StringBuffer newPageContent = new StringBuffer();
+		includeSetupPages(testPage, newPageContent, isSuite);
+		newPageContent.append(pageData.getContent());
+		includeTeardownPages(testPage, newPageContent, isSuite);
+		pageData.setContent(newPageContent.toString());
+	}
+	return pageData.getHtml();
+}
+```
+
+- Here is the re-refactored view:
+
+```java
+// code 3
+public static String renderPageWithSetupsAndTeardowns(PageData pageData, boolean isSuite) throws Exception {
+	if (isTestPage(pageData))
+		includeSetupAndTeardownPages(pageData, isSuite);
+	return pageData.getHtml();
+}
+```
+
+ 
+
+### Blocks and Indenting
+
+- The above code implies that the blocks within `if, else, while, for ...`  statements and so on should be one line long. Probably **that line should be a function call**.
+- Not only does this keep the enclosing function small, but is also adds documentary value because the function called within the block can have a nicely descriptive name.
+- **This also implies that functions should be larger to hold nested structures. Therefore, the indent level of a function should not be greater than one or two.** This, of course, makes the functions easier to read and understand. 
+
+
+
+### Do One Thing
+
+- It should be very clear that code-1 is doing lots more than one thing. It's creating buffers, fetching pages, searching for inherited pages, rendering paths. 
+- On the other hand, code-3 is doing one simple thing. It's including setups and teardowns into test pages.
+- **Functions should do one thing. They should do it well. They should do it only**
+  - The problem with this statement is that it is hard to know what **one thing** is.
+  - Does code-3 do one thing? It's easy to make the case that it's doing three things:
+    - Determining whether the page is a test page
+    - If so, including setups and teardowns.
+    - Rendering the page in HTML
+  - Notice that the three steps of the function are one level of abstraction below the stated name of the function. We can describe the function by describing it as a brief paragraph:
+    - TO RenderPageWithSetupsAndTeardowns, we check to see whether the page is a test page and if so, we include the setups and teardowns. In either case we render the page in HTML
+- So, another way to know that a function is doing more than "one thing" is if we can extract another function from it with a name that merely(only) a restatement of its implementation.
+
+
+
+### One Level of Abstraction per Function
+
+- In order to make sure our functions are doing "one thing", we need to make sure that the statements within our functions are all at the same level of abstraction.
+- Code-1 violates this rule. There are concepts in there that are at a very high level of abstraction, such as `getHtml()` others that are at an intermediate level of abstractions such as `String pagePathName = PathParser.render(pagePath)` and still others that are remarkably low level, such as ` .append("\n")`
+- Mixing levels of abstraction within a function is always confusing.
