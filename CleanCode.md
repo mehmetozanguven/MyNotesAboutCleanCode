@@ -431,7 +431,7 @@ To include the setups and teardowns, we include setups, then we include the test
 package fitnesse.html;
 import fitnesse.responders.run.SuiteResponder;
 import fitnesse.wiki.*;
-
+// code 4
 public class SetupTeardownIncluder{
     private PageData pageData;
 	private boolean isSuite;
@@ -555,6 +555,7 @@ public class SetupTeardownIncluder{
 - Consider the function below
 
 ```java
+// code 5
 public Money calculatePay(Employee e) throws InvalidEmployeeType{
     switch (e.type){
         case COMMISSIONED:
@@ -581,6 +582,7 @@ public Money calculatePay(Employee e) throws InvalidEmployeeType{
 - General advice for switch statement is that they can be tolerated if they appear only once, are used to create polymorphic objects and are hidden behind an inheritance.
 
 ```java
+// code 6
 public abstract class Employee{
     public abstract boolean isPayday();
 	public abstract Money calculatePay();
@@ -634,4 +636,96 @@ You know you are working on clean code when each routine turns out to be pretty 
 - Followed closely by two
 - Three arguments should be avoided where possible.
 - More than three requires very special justification
-- 
+- Sometimes one input argument is the next bes thing to no arguments. `SetupTeardownIncluder.render(pageDate)` is pretty easy to understand. Clearly we are going to render the data in the `pageData` object.
+- Don't follow this structure: (let's say we are going to transform transform string buffer argument to smth useful)
+
+```java
+void transform-(StringBuffer out);
+```
+
+- Follow this:
+
+```java
+StringBuffer transform(StringBuffer in);
+```
+
+
+
+### Flag Arguments
+
+- Flag arguments are ugly. Passing a boolean into a function is a truly terrible practice.
+- It immediately complicates the signature of the method, loudly proclaiming that this function does more than one thing. It does one thing if the flag is true and another if the flag is false.
+- In `code 4` we had no choice because the callers were already passing that flag in the `render(boolean isSuite)`. We should have split the function into two: `renderForSuite()` and `renderforSingleTest()`
+
+
+
+### Verbs and Keywords
+
+- In the case of a monad(function with one argument), the function and argument should form a very nice verb/noun pair.
+- For example: `write(name)` is very evocative. Whatever this name thing is, it is being written. An even better name might be `writeField(name)`, which tells us that the name thing is a field
+
+
+
+### Have No Side Effects
+
+- Side effects are lies. Our function promises to do one thing, but it also does other "hidden" things.
+- Consider the example:
+
+```java
+public class UserValidator{
+    private Cryptographer cryptographer;
+    
+    public boolean checkPassword(String userName, String password){
+        User user = UserGateway.findByName(userName);
+        if (user != User.NULL){
+            String codedPhrase = user.getPhraseEncodedByPassword();
+            if ("ValidPassword".equals(phase)){
+                Session.initialize();
+                return true;
+            }
+        }
+        return false;
+    }
+}
+```
+
+- It may seem that "this function does one thing". However, it also calls to `Session.initialize()` .
+- This side effect creates a temporal coupling. That is, `checkPassword()` can only by called at certain times (in other words, when it is safe to initialize the session). If it is called out of order, session data may be inadvertently lost.
+- If we must have a temporal coupling, we should make it clear in the name of the function. In this case we might rename the function `checkPasswordAndInitializeSession` though that certainly violates "Do one thing"
+
+
+
+### Extract Try/Catch Blocks
+
+- `Try/catch` blocks are ugly in their own right. They confuse the structure of the code and mix error processing with normal processing. So it is better to extract the bodies of the `try` and `catch` blocks out into functions of their own.
+
+```java
+public void delete(Page page){
+    try{
+        deletePageAndAllReferences(page);
+    }catch(Exception e){
+        logError(e);
+    }
+}
+
+private void deletePageAndAllReferences(Page page) throws Exception{
+    deletePage(page);
+    registry.deleteReference(page.name);
+    configKeys.deleteKey(page.name.makeKey());
+}
+
+private void logError(Exception e){
+    logger.log(e.getMessage());
+}
+```
+
+- In the above, the `delete` function is all about error processing. It is easy to understand and then ignore.
+- The `deletePageAndAllReferences` function is all about the processes of fully deleting a `page`. Error handling can be ignored. This provides a nice separation that makes the code easier to understand and modify.
+
+
+
+### Error Handling is one thing
+
+- Functions should do one thing. Error handling is one thing.
+- Thus, a function that handles errors should do nothing else.
+- This implies that if the keyword `try` exists in a function, it should be very first word in the function and that there should be nothing after the `catch/finally` blocks.
