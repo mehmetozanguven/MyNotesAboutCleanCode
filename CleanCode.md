@@ -407,3 +407,231 @@ public static String renderPageWithSetupsAndTeardowns(PageData pageData, boolean
 - In order to make sure our functions are doing "one thing", we need to make sure that the statements within our functions are all at the same level of abstraction.
 - Code-1 violates this rule. There are concepts in there that are at a very high level of abstraction, such as `getHtml()` others that are at an intermediate level of abstractions such as `String pagePathName = PathParser.render(pagePath)` and still others that are remarkably low level, such as ` .append("\n")`
 - Mixing levels of abstraction within a function is always confusing.
+
+
+
+### Reading Code from Top to Bottom :  The Stepdown Rule
+
+- We want the code to read like a top-down narrative. 
+- We want every function to be followed by those at the next level of abstraction so that we can read the program.
+- We call this **The Stepdown Rule**
+- In other words, we want to be able to read the program as though it were a set of **TO** paragraphs, each of which is describing the current level of abstraction and referencing subsequent **TO** paragraphs at the next level down.
+
+```latex
+To include the setups and teardowns, we include setups, then we include the test page content and then we include the teardowns.
+	To include the setups, we include the suite setup if this is a suite, then we include the regular setup
+	To include the suite setup, we search the parent hierarchy for the "SuiteSetUp" page and add an include statement with the path of that page.
+	To search the parent...
+```
+
+- It is very difficult for programmers to learn to follow this rule and write functions that stay at a single level of abstraction. But learning this trick is also very important. It is the key to keeping functions short and making sure they do "one thing"
+- Here is the example:
+
+```java
+package fitnesse.html;
+import fitnesse.responders.run.SuiteResponder;
+import fitnesse.wiki.*;
+
+public class SetupTeardownIncluder{
+    private PageData pageData;
+	private boolean isSuite;
+	private WikiPage testPage;
+	private StringBuffer newPageContent;
+	private PageCrawler pageCrawler;
+    
+    public static String render(PageData pageDate) throws Exception{
+        return render(pageDate, false);
+    }
+    
+    public static String render(PageData pageDate, boolean isSuite) throws Exception{
+        return new SetupTeardownIncluder(pageData).render(isSuite);
+    }
+    
+    private SetupTeardownIncluder(PageData pageData) {
+		this.pageData = pageData;
+		testPage = pageData.getWikiPage();
+		pageCrawler = testPage.getPageCrawler();
+		newPageContent = new StringBuffer();
+	}
+    
+    private String render(boolean isSuite) throws Exception {
+		this.isSuite = isSuite;
+		if (isTestPage())
+			includeSetupAndTeardownPages(); // To include setup and teardown
+		return pageData.getHtml();
+	}
+    
+    private boolean isTestPage() throws Exception {
+		return pageData.hasAttribute("Test");
+	}
+    
+    private void includeSetupAndTeardownPages() throws Exception {
+		includeSetupPages(); // 1. we include setup
+		includePageContent(); // 6. then we include test page content
+		includeTeardownPages(); // 8. and then we include teardown page
+		updatePageContent(); // 12.
+	}
+    
+    // 2.
+    private void includeSetupPages() throws Exception {
+		if (isSuite)
+			includeSuiteSetupPage();
+		includeSetupPage();
+	}
+    
+    // 3.
+	private void includeSuiteSetupPage() throws Exception {
+		include(SuiteResponder.SUITE_SETUP_NAME, "-setup");
+	}
+    
+    // 4.
+    private void includeSetupPage() throws Exception {
+		include("SetUp", "-setup");
+	}
+    
+    // 7.
+	private void includePageContent() throws Exception {
+		newPageContent.append(pageData.getContent());
+	}
+    
+    // 8.
+	private void includeTeardownPages() throws Exception {
+		includeTeardownPage(); // 9.
+		if (isSuite)
+			includeSuiteTeardownPage(); // 10.
+	}
+    
+    // 9.
+    private void includeTeardownPage() throws Exception {
+		include("TearDown", "-teardown");
+	}
+    
+    // 10.
+	private void includeSuiteTeardownPage() throws Exception {
+		include(SuiteResponder.SUITE_TEARDOWN_NAME, "-teardown");
+	}
+    
+    // 12.
+	private void updatePageContent() throws Exception {
+		pageData.setContent(newPageContent.toString());
+	}
+    
+    // 5. , 11.
+	private void include(String pageName, String arg) throws Exception {
+		WikiPage inheritedPage = findInheritedPage(pageName);
+		if (inheritedPage != null) {
+			String pagePathName = getPathNameForPage(inheritedPage);
+			buildIncludeDirective(pagePathName, arg);
+		}
+	}
+    
+	private WikiPage findInheritedPage(String pageName) throws Exception {
+		return PageCrawlerImpl.getInheritedPage(pageName, testPage);
+	}
+    
+	private String getPathNameForPage(WikiPage page) throws Exception {
+		WikiPagePath pagePath = pageCrawler.getFullPath(page);
+		return PathParser.render(pagePath);
+	}
+    
+    private void buildIncludeDirective(String pagePathName, String arg) {
+		newPageContent
+			.append("\n!include ")
+    		.append(arg)
+			.append(" .")
+			.append(pagePathName)
+			.append("\n");
+	}
+}
+```
+
+
+
+### Switch Statements
+
+- It's hard to make a small switch statement.
+- It's also hard to make a `switch` statement that does one thing. By their nature, `switch` statement always do N things.
+- Unfortunately we can't always avoid switch statements, but we can make sure that each switch statement is buried in a low-level class and is never repeated. We do this with polymorphism.
+- Consider the function below
+
+```java
+public Money calculatePay(Employee e) throws InvalidEmployeeType{
+    switch (e.type){
+        case COMMISSIONED:
+            return calculateCommissionedPay(e);
+        case HOURLY:
+            return calculateHourlyPay(e);
+        case SALARIED:
+            return calculateSalariedPay(e);
+        default:
+            throw new InvalidEmployeeType(e.type);
+    }
+}
+```
+
+- There are several problems with this functions. 
+  - First, it's large and when new employee types are added, it will grow.
+  - Second, it very clearly does more than one thing.
+  - Third, it violates the Single Responsibility Principle because there is more than one reason for it to change.
+  - Fourth, it violates the Open Closed Principle because it must change whenever new types are added.
+  - But possibly the worst problem with this function is that there are an unlimited number of other functions that will have the same structure. For example, we could have:
+  - `isPayday(Employee e, Date date) or deliverDay(Employee e, Money pay)` etc.. All of which would have the same deleterious(harmful) structure.
+- The solution to this problem is to bury the switch statement in the basement of an ABSTRACT FACTORY and never let anyone see it.
+- The factory will use the `switch` statement to create appropriate instances of the derivatives of `Employee` and the various functions, such as `calculatePay, isPayDay and deliverPay` will be dispatched polymorphically through the `Employee` interface.
+- General advice for switch statement is that they can be tolerated if they appear only once, are used to create polymorphic objects and are hidden behind an inheritance.
+
+```java
+public abstract class Employee{
+    public abstract boolean isPayday();
+	public abstract Money calculatePay();
+	public abstract void deliverPay(Money pay);
+}
+-----------------------------------
+public interface EmployeeFactory{
+    public Employee makeEmployee(EmployeeRecord r) throws InvalidEmployeeType;
+}
+-----------------------------------
+public class EmployeeFactoryImpl implements EmployeeFactory{
+    public Employee makeEmployee(EmployeeRecord r) throws InvalidEmployeeType{
+        switch (r.type) {
+			case COMMISSIONED:
+				return new CommissionedEmployee(r) ;
+			case HOURLY:
+				return new HourlyEmployee(r);
+			case SALARIED:
+				return new SalariedEmploye(r);
+			default:
+				throw new InvalidEmployeeType(r.type);
+		}
+    }
+}
+```
+
+
+
+### Use Descriptive Names
+
+- We changed to example function name from `testableHtml` to `SetupTeardownIncluder.render`. This is a far better name because it better described what the function does.
+- It's hard to overestimate the value of good names. Remember Ward's principle
+
+```latex
+You know you are working on clean code when each routine turns out to be pretty much what you expected
+```
+
+- **Don't be afraid to make a name long. A long descriptive name is better than a short enigmatic name.**
+- **A long descriptive name is better than a long descriptive comment**
+- **Use a naming convention that allows multiple words to be easily read in the function names**
+- **and then make use of those multiple words to give the function a name that says what it does**
+- **Don't be afraid to spend time choosing a name.**
+- **Be consistent in names. Use the same phrases, nouns and verbs in the function names you choose for your modules**. Consider, for example the names: `includeSetupAndTeardownPages , includeSetupPages , includeSuiteSetupPage , and includeSetupPage` .
+
+
+
+### Function Arguments
+
+- The ideal number of arguments for a function is zero
+- Next comes one
+- Followed closely by two
+- Three arguments should be avoided where possible.
+- More than three requires very special justification
+- 
