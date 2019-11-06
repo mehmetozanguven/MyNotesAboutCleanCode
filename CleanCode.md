@@ -729,3 +729,463 @@ private void logError(Exception e){
 - Functions should do one thing. Error handling is one thing.
 - Thus, a function that handles errors should do nothing else.
 - This implies that if the keyword `try` exists in a function, it should be very first word in the function and that there should be nothing after the `catch/finally` blocks.
+
+
+
+### Conclusion
+
+- Every system is built from a domain-specific language designed by the programmers to describe that system.
+- **Functions are the verbs of that language and classes are the nouns**
+- The art of programming is, and has always been, the art of language design.
+
+
+
+## Comments
+
+- When we find ourselves in a position where we need to write a comment, think it through and see whether there isn't some way to turn the tables and express ourselves in code.
+
+
+
+### Explain Yourself in Code
+
+- Which one is better ?
+
+```java
+// Check to see if the employee is eligible for full benefits
+if (employee.flags & HOURLY_FLAG) && (employee.age > 65){
+    
+}
+// or this?
+if (employee.isEligibleForFullBenefits())
+```
+
+
+
+### Informative Comments
+
+- It is sometimes useful to provide basic information with a comment. For example:
+
+```java
+// Returns an instance of the Responder being tested
+protected abstract Responder responderInstance();
+```
+
+- Even if this comment is a good, function could be named it such as `responderBeingTested`
+- Here's the another example:
+
+```java
+// format matched kk:mm:ss EEE, MMM dd, yyyy
+Pattern timeMatcher = Pattern.compile(
+"\\d*:\\d*:\\d* \\w*, \\w* \\d*, \\d*");
+```
+
+
+
+### Clarification
+
+- It is just helpful to translate the meaning of some obscure argument or return value into smth that's readable.
+- For example:
+
+```java
+public void testCompareTo() throws Exception
+{
+    WikiPagePath a = PathParser.parse("PageA");
+    WikiPagePath ab = PathParser.parse("PageA.PageB");
+    WikiPagePath b = PathParser.parse("PageB");
+    WikiPagePath aa = PathParser.parse("PageA.PageA");
+    WikiPagePath bb = PathParser.parse("PageB.PageB");
+    WikiPagePath ba = PathParser.parse("PageB.PageA");
+    assertTrue(a.compareTo(a) == 0); 	// a == a
+    assertTrue(a.compareTo(b) != 0); 	// a != b
+    assertTrue(ab.compareTo(ab) == 0);	// ab == ab
+    assertTrue(a.compareTo(b) == -1);	// a < b
+    assertTrue(aa.compareTo(ab) == -1); // aa < ab
+}
+```
+
+
+
+### Warning of Consequences
+
+- Sometimes it is useful to warn other programmers about certain consequences
+
+```java
+// Don't run unless you
+// have some time to kill.
+public void _testWithReallyBigFile()
+{
+    writeLinesToFile(10000000);
+    response.setBody(testFile);
+    response.readyToSend(this);
+    String responseString = output.toString();
+    assertSubString("Content-Length: 1000000000", responseString);
+    assertTrue(bytesSent > 1000000000);
+}
+```
+
+
+
+### TODO Comments
+
+- It is sometimes reasonable to leave "To do" notes in the form of `//TODO` comments.
+- `TODO`s are jobs that the programmer thinks should be done, but for some reason can't do at the moment
+
+```java
+//TODO-MdM these are not needed
+// We expect this to go away when we do the checkout model
+protected VersionInfo makeVersion() throws Exception
+{
+	return null;
+}
+```
+
+
+
+### Mumbling (Mırıldanma)
+
+- If we decide to write a comment, then spend the time necessary to make sure it is the best comment we can write.
+
+- For example:
+
+```java
+public void loadProperties()
+{
+    try
+    {
+        String propertiesPath = propertiesLocation + "/" + PROPERTIES_FILE;
+        FileInputStream propertiesStream = new FileInputStream(propertiesPath);
+        loadedProperties.load(propertiesStream);
+    }
+    catch(IOException e)
+    {
+    	// No properties files means all defaults are loaded
+    }
+}
+```
+
+- What does that comment in the  `catch` block mean? Clearly it means smth to the author, but the meaning does not come though all that well.
+- Apparently, if we get an `IOException` it means that there was no properties file, and in that case all the defaults are loaded. But who loads all the defaults? Were they loaded before the call to `loadProperties.load` ?
+  - Or did `loadProperties.load` catch the exception, load the defaults,and then pass the exception on for us to ignore?
+  - Or did `loadProperties.load` load all the defaults before attempting to load the file?
+  - Was the author trying to comfort himself about the fact that he was leaving the catch block empty?
+
+
+
+### Redundant Comments
+
+- This comment probably takes longer to read than the code itself
+
+```java
+// Utility method that returns when this.closed is true. Throws an exception
+// if the timeout is reached.
+public synchronized void waitForClose(final long timeoutMillis) throws Exception {
+    if(!closed)
+    {
+    	wait(timeoutMillis);
+        if(!closed)
+        	throw new Exception("MockResponseSender could not be closed");
+    }
+}
+```
+
+- This comment is not more informative than the code. It does not justify the code, or provide intent or rationale.
+- Here is the another redundant comment. These comments serve only to clutter and obscure the code:
+
+```java
+public abstract class ContainerBase implements Container, Lifecycle, Pipeline, MBeanRegistration, Serializable{
+    /**
+    * The processor delay for this component.
+    */
+    protected int backgroundProcessorDelay = -1;
+    /**
+    * The lifecycle event support for this component.
+    */
+    protected LifecycleSupport lifecycle =
+    new LifecycleSupport(this);
+    /**
+    * The container event listeners for this Container.
+    */
+    protected ArrayList listeners = new ArrayList();
+    /**
+    * The Loader implementation with which this Container is
+    * associated.
+    */
+    protected Loader loader = null;
+    /**
+    * The Logger implementation with which this Container is
+    * associated.
+    */
+    protected Log logger = null;
+    /**
+    * Associated logger name.
+    */
+    protected String logName = null;
+    /**
+    * The Manager implementation with which this Container is
+    * associated.
+    */
+    protected Manager manager = null;
+    /**
+    * The cluster with which this Container is associated.
+    */
+    protected Cluster cluster = null;
+    // ....
+}
+```
+
+
+
+### Mandated Comments
+
+- It is just plain silly to have a rule that says that every function must have a javadoc, or every variable must have a comment.
+
+```java
+/**
+*
+* @param title The title of the CD
+* @param author The author of the CD
+* @param tracks The number of tracks on the CD
+* @param durationInMinutes The duration of the CD in minutes
+*/
+public void addCD(String title, String author,int tracks, int durationInMinutes) {
+    CD cd = new CD();
+    cd.title = title;
+    cd.author = author;
+    cd.tracks = tracks;
+    cd.duration = duration;
+    cdList.add(cd);
+}
+```
+
+
+
+### Noise Comments
+
+- Sometimes we see comments that are nothing but noise. They restate the obvious and provide no new information.
+
+```java
+/**
+* Default constructor.
+*/
+protected AnnualDateRule() {
+}
+
+/** The day of the month. */
+private int dayOfMonth;
+
+/**
+* Returns the day of the month.
+*
+* @return the day of the month.
+*/
+public int getDayOfMonth() {
+	return dayOfMonth;
+}
+```
+
+
+
+### Don't Use a Comment When We can use a function or variable
+
+- Consider the following stretch of code:
+
+```java
+// does the module from the global list <mod> depend on the
+// subsystem we are part of?
+if (smodule.getDependSubsystems().contains(subSysMod.getSubSystem()))
+```
+
+- This could be rephrased without the comment as
+
+```java
+ArrayList moduleDependees = smodule.getDependSubsystems();
+String ourSubSystem = subSysMod.getSubSystem();
+if (moduleDependees.contains(ourSubSystem))
+```
+
+
+
+### Commented-Out Code
+
+- Few practices are as odious(iğrenç) as commenting-out code. Don't do this:
+
+```java
+InputStreamResponse response = new InputStreamResponse();
+response.setBody(formatter.getResultStream(), formatter.getByteCount());
+// InputStream resultsStream = formatter.getResultStream();
+// StreamReader reader = new StreamReader(resultsStream);
+// response.setContent(reader.read(formatter.getByteCount()));
+```
+
+- Others who see that commented-out code won't have the courage to delete it. They'll think it is there for a reason and is too important to delete.
+
+
+
+### Inobvious Connection
+
+- The connection between a comment and the code it describes should be obvious.
+- Example:
+
+```java
+/*
+* start with an array that is big enough to hold all the pixels
+* (plus filter bytes), and an extra 200 bytes for header info
+*/
+this.pngBytes = new byte[((this.width + 1) * this.height * 3) + 200];
+```
+
+- What is a filter byte? Does it relate to the `+1` or to the `*3` or both?
+- Is a pixel a byte?
+- Why 200?
+
+
+
+### Example
+
+- Here is the bad code and comment:
+
+```java
+/**
+* This class Generates prime numbers up to a user specified
+* maximum. The algorithm used is the Sieve of Eratosthenes.
+* <p>
+* Eratosthenes of Cyrene, b. c. 276 BC, Cyrene, Libya --
+* d. c. 194, Alexandria. The first man to calculate the
+* circumference of the Earth. Also known for working on
+* calendars with leap years and ran the library at Alexandria.
+* <p>
+* The algorithm is quite simple. Given an array of integers
+* starting at 2. Cross out all multiples of 2. Find the next
+* uncrossed integer, and cross out all of its multiples.
+* Repeat untilyou have passed the square root of the maximum
+* value.
+*
+* @author Alphonse
+* @version 13 Feb 2002 atp
+*/
+import java.util.*;
+public class GeneratePrimes{
+/**
+* @param maxValue is the generation limit.
+*/
+public static int[] generatePrimes(int maxValue){
+if (maxValue >= 2) // the only valid case
+{
+	// declarations
+    int s = maxValue + 1; // size of array
+    boolean[] f = new boolean[s];
+    int i;
+    // initialize array to true.
+    for (i = 0; i < s; i++)
+    f[i] = true;
+    // get rid of known non-primes
+    f[0] = f[1] = false;
+    // sieve
+    int j;
+    for (i = 2; i < Math.sqrt(s) + 1; i++)
+    {
+        if (f[i]) // if i is uncrossed, cross its multiples.
+        {
+        for (j = 2 * i; j < s; j += i)
+            f[j] = false; // multiple is not prime
+        }
+    }
+    // how many primes are there?
+    int count = 0;
+    for (i = 0; i < s; i++)
+    {
+        if (f[i])
+        count++; // bump count.
+    }
+    int[] primes = new int[count];
+    // move the primes into the result
+    for (i = 0, j = 0; i < s; i++)
+    {
+        if (f[i])// if prime
+            primes[j++] = i;
+    }
+    return primes; // return the primes
+    }
+    else // maxValue < 2
+    return new int[0]; // return null array if bad input.
+	}
+}
+```
+
+
+
+- Good one
+
+```java
+/**
+* This class Generates prime numbers up to a user specified
+* maximum. The algorithm used is the Sieve of Eratosthenes.
+* Given an array of integers starting at 2:
+* Find the first uncrossed integer, and cross out all its
+* multiples. Repeat until there are no more multiples
+* in the array.
+*/
+public class PrimeGenerator{
+    private static boolean[] crossedOut;
+    private static int[] result;
+	public static int[] generatePrimes(int maxValue){
+        if (maxValue < 2)
+        	return new int[0];
+        else
+        {
+            uncrossIntegersUpTo(maxValue);
+            crossOutMultiples();
+            putUncrossedIntegersIntoResult();
+            return result;
+    	}
+	}
+    private static void uncrossIntegersUpTo(int maxValue){
+        crossedOut = new boolean[maxValue + 1];
+        for (int i = 2; i < crossedOut.length; i++)
+        	crossedOut[i] = false;
+    }
+    
+    private static void crossOutMultiples(){
+        int limit = determineIterationLimit();
+        for (int i = 2; i <= limit; i++)
+        if (notCrossed(i))
+        	crossOutMultiplesOf(i);
+    }
+
+    private static int determineIterationLimit(){
+    // Every multiple in the array has a prime factor that
+    // is less than or equal to the root of the array size,
+    // so we don't have to cross out multiples of numbers
+    // larger than that root.
+    double iterationLimit = Math.sqrt(crossedOut.length);
+    return (int) iterationLimit;
+    }
+    
+	private static void crossOutMultiplesOf(int i){
+    for (int multiple = 2*i;
+    multiple < crossedOut.length;
+    multiple += i)
+    	crossedOut[multiple] = true;
+    }
+    
+    private static boolean notCrossed(int i){
+    	return crossedOut[i] == false;
+    }
+    
+	private static void putUncrossedIntegersIntoResult(){
+    result = new int[numberOfUncrossedIntegers()];
+    for (int j = 0, i = 2; i < crossedOut.length; i++)
+    	if (notCrossed(i))
+    		result[j++] = i;
+    }
+    
+	private static int numberOfUncrossedIntegers(){
+    int count = 0;
+    for (int i = 2; i < crossedOut.length; i++)
+    	if (notCrossed(i))
+            count++;
+    return count;
+    }
+}
+```
+
