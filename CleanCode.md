@@ -1189,3 +1189,257 @@ public class PrimeGenerator{
 }
 ```
 
+
+
+## Formatting
+
+- Take care your code is nicely formatted
+- Choose a set of simple rules that govern the format of your code. Then consistently apply those rules
+
+
+
+### Variable Declarations
+
+- Variables should be declared as close to their usage as possible.
+- Because our functions are very short, local variables should appear at the top of each function
+
+```java
+private static void readPreferences(){
+    InputStream is = null;
+    try{
+        is = new FileInoutStream(getPreferencesFile());
+        setPreferences(new Properties(getPreferences()));
+        getPreferences().load(is);
+    }catch (IOException e){
+        try{
+            if (is != null)
+                is.close();
+        }catch{
+            
+        }
+    }
+}
+```
+
+
+
+- Control variables for loops should be usually declared withing the loop statement.
+
+```java
+public int countTestCases(){
+    int count = 0;
+    for (Test each : tests)
+        count += each.countTestCases();
+    return count;
+}
+```
+
+- **Instance variables**, should be declared at the top of the class.
+
+
+
+### Dependent Functions
+
+- If one function calls another, they should be vertically close, and the caller should be above the callee. This gives the program a natural flow.
+- Here is the good example:
+
+```java
+public class WikiPageResponder implements SecureResponder {
+    protected WikiPage page;
+    protected PageData pageData;
+    protected String pageTitle;
+    protected Request request;
+    protected PageCrawler crawler;
+    
+    public Response makeResponse(FitNesseContext context, Request request)throws Exception {
+        String pageName = getPageNameOrDefault(request, "FrontPage");
+            loadPage(pageName, context);
+        if (page == null)
+        	return notFoundResponse(context, request);
+        else
+        	return makePageResponse(context);
+    }
+    
+    private String getPageNameOrDefault(Request request, String defaultPageName){
+        String pageName = request.getResource();
+        if (StringUtil.isBlank(pageName))
+        	pageName = defaultPageName;
+        return pageName;
+    }
+    
+    protected void loadPage(String resource, FitNesseContext context)throws Exception {
+        WikiPagePath path = PathParser.parse(resource);
+        crawler = context.root.getPageCrawler();
+        crawler.setDeadEndStrategy(new VirtualEnabledPageCrawler());
+        page = crawler.getPage(context.root, path);
+        if (page != null)
+        	pageData = page.getData();
+    }
+    
+    private Response notFoundResponse(FitNesseContext context, Request request)throws Exception {
+    	return new NotFoundResponder().makeResponse(context, request);
+    }
+    
+    private SimpleResponse makePageResponse(FitNesseContext context)throws Exception {
+        pageTitle = PathParser.render(crawler.getFullPath(page));
+        String html = makeHtml(context);
+        SimpleResponse response = new SimpleResponse();
+        response.setMaxAge(0);
+        response.setContent(html);
+        return response;
+    }
+```
+
+- We expect the most important concepts to come first and we expect them to be expressed with the least amount of polluting detail. We expect the low-level details to come last.
+
+
+
+### Horizontal Alignment
+
+- Don't need to do line up all the variable names in a set of declarations. For example:
+
+```java
+public class FitNesseExpediter implements ResponseSender
+{
+    private Socket								socket;
+    private InputStream							input;
+    private OutputStream						output;
+    private Request								request;
+    private Response							response;
+    private FitNesseContext 					context;
+    protected long 								requestParsingTimeLimit;
+    private long 								requestProgress;
+    private long 								requestParsingDeadline;
+    private boolean 							hasError;
+
+public FitNesseExpediter(Sockets,FitNesseContext context) throws Exception
+{
+    this.context = 				context;
+    socket = 					s;
+    input = 					s.getInputStream();
+    output = 					s.getOutputStream();
+    requestParsingTimeLimit = 	10000;
+}
+```
+
+- This alignment seems to emphasize the wrong things and lead our eye away from the true indent. We are tempted to read down the list of variables names without looking at their types.
+- So you should write like this:
+
+```java
+public class FitNesseExpediter implements ResponseSender
+{
+    private Socket socket;
+    private InputStream input;
+    private OutputStream output;
+    private Request request;
+    private Response response;
+    private FitNesseContext context;
+    // ...
+public FitNesseExpediter(Socket s, FitNesseContext context) throws Exception
+{
+    this.context = context;
+    socket = s;
+    input = s.getInputStream();
+    output = s.getOutputStream();
+    requestParsingTimeLimit = 10000;
+}
+```
+
+
+
+### Uncle Bob Code formatting example
+
+```java
+public class CodeAnalyzer implements JavaFileAnalysis {
+    private int lineCount;
+    private int maxLineWidth;
+    private int widestLineNumber;
+    private LineWidthHistogram lineWidthHistogram;
+    private int totalChars;
+    
+    public CodeAnalyzer() {
+    	lineWidthHistogram = new LineWidthHistogram();
+    }
+    
+    public static List<File> findJavaFiles(File parentDirectory) {
+        List<File> files = new ArrayList<File>();
+        findJavaFiles(parentDirectory, files);
+        return files;
+    }
+    
+    private static void findJavaFiles(File parentDirectory, List<File> files) {
+        for (File file : parentDirectory.listFiles()) {
+            if (file.getName().endsWith(".java"))
+                files.add(file);
+            else if (file.isDirectory())
+                findJavaFiles(file, files);
+            }
+    }
+    
+    public void analyzeFile(File javaFile) throws Exception {
+        BufferedReader br = new BufferedReader(new FileReader(javaFile));
+        String line;
+        while ((line = br.readLine()) != null)
+        	measureLine(line);
+    }
+    
+    private void measureLine(String line) {
+        lineCount++;
+        int lineSize = line.length();
+        totalChars += lineSize;
+        lineWidthHistogram.addLine(lineSize, lineCount);
+        recordWidestLine(lineSize);
+    }
+    
+    private void recordWidestLine(int lineSize) {
+        if (lineSize > maxLineWidth) {
+        	maxLineWidth = lineSize;
+        	widestLineNumber = lineCount;
+        }
+    }
+
+    public int getLineCount() {
+    	return lineCount;
+    }
+    
+    public int getMaxLineWidth() {
+    	return maxLineWidth;
+    }
+    
+    public int getWidestLineNumber() {
+    	return widestLineNumber;
+    }
+    
+    public LineWidthHistogram getLineWidthHistogram() {
+    	return lineWidthHistogram;
+    }
+    
+    public double getMeanLineWidth() {
+   		return (double)totalChars/lineCount;
+    }
+    
+    public int getMedianLineWidth() {
+        Integer[] sortedWidths = getSortedWidths();
+        int cumulativeLineCount = 0;
+        for (int width : sortedWidths) {
+        	cumulativeLineCount += lineCountForWidth(width);
+            if (cumulativeLineCount > lineCount/2)
+            return width;
+        }
+        throw new Error("Cannot get here");
+    }
+    
+    private int lineCountForWidth(int width) {
+    	return lineWidthHistogram.getLinesforWidth(width).size();
+    }
+    
+    private Integer[] getSortedWidths() {
+        Set<Integer> widths = lineWidthHistogram.getWidths();
+        Integer[] sortedWidths = (widths.toArray(new Integer[0]));
+        Arrays.sort(sortedWidths);
+        return sortedWidths;
+    }
+}
+```
+
+- sss
