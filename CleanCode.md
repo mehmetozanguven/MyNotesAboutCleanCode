@@ -1442,4 +1442,182 @@ public class CodeAnalyzer implements JavaFileAnalysis {
 }
 ```
 
-- sss
+
+
+
+
+## Objects And Data Structure
+
+- Hiding implementation is about abstractions!
+- A class does not simply push its variables out through getters and setter. Rather it exposes abstract interfaces that allow its users to manipulate the essence of the data (data itself), without having to know its implementation
+
+```java
+// sample-1
+public interface Vehicle{
+    double getFuelTankCapacityInGallons();
+    double getGallansOfGasoline();
+}
+// sample-2
+public interface Vehicle{
+    double getPercentFuelRemaining();
+}
+```
+
+- In the first example, one can be sure that these are just accessors of variables. In the second case one have no clue at all about the form of the data.
+- In both of the above cases the second option is preferable
+- **We do not want to expose the details of our data. Rather we want to express our data in abstract term**
+
+
+
+### Data/Object Anti-Symmetry
+
+- Objects hide their data behind abstractions and expose functions that operate on that data
+- Data structure expose their data and have no meaningful functions
+- For better understanding consider the procedural example. `Geomerty` class operate on three shape classes. The shape classes are simple data structures without any behavior. All the behavior is in the `Geomerty` class
+
+```java
+public class Square{
+    public Point topLeft;
+    public double side;
+}
+
+public class Rectangle{
+    public Point point;
+    public double height;
+    public double width;
+}
+
+public class Circle{
+    public Point center;
+    public double radious;
+}
+
+public class Geomety{
+    public final double PI = 3.1415;
+    
+    public double area(Object shape) throws NoSuchShapeException{
+        if (shape instanceof Square){
+            Square s = (Square) shape;
+            return s.side * s.side;
+        }else if(shape instanceof Rectange){
+            Rectangle r = (Rectangle) shape;
+            return r.height * r.width;
+        }else if(shape instanceof Circle){
+            Circle c = (Circle) shape;
+            return PI * c.radious * c.radious;
+        }
+        throw new NoSuchShapeException();
+    }
+}
+```
+
+- Consider what would happen if a `perimeter()` function were added to `Geometry`. The shape classes would be unaffected. Any other classes that depended upon the shape would also be unaffected
+- Now let's consider the object-oriented solution. Here the `area()` method is polymorphic. No `Gemomety` class is necessary. So if we all a new shape, none of the existing functions are affected, but if we add a new function all of the **shapes must be changed**.
+
+```java
+public class Square implements Shape{
+    private Point topLeft;
+    private double side;
+    
+    public double area(){
+        return side * side;
+    }
+}
+
+public class Rectangle implements Shape{
+    private Point topLeft;
+	private double height;
+	private double width;
+	
+    public double area() {
+		return height * width;
+	}
+}
+
+public class Circle implements Shape {
+    private Point center;
+    private double radius;
+    public final double PI = 3.141592653589793;
+    
+    public double area() {
+    	return PI * radius * radius;
+    }
+}
+```
+
+- Therefore, fundamental difference between objects and data structures:
+  - **Procedural code(code using data structure) makes it easy to add new functions without changing the existing data structure. OO code, on the other hand, makes it easy to add new classes without changing existing functions**
+  - On we can say this like this: **Procedural code makes it hard to add new data structure because all the functions must change. OO code makes it hard to add new functions because all the classes must change.**
+  - **So, the things that are hard for OO are easy for procedures and visa verse**
+- In any complex system:
+  - **When we want to add new data types rather than new functions. For these cases objects and OO are most appropriate.**
+  - **On the other hand, when we want to add new functions as opposed to data types. In that case procedural code and data structures will be more appropriate**
+
+
+
+### The Law of Demeter
+
+- **Law of Demeter**: says a module should not know about the innards of the objects it manipulates
+
+- **Law of Demeter** says that a method `f` of a class `C` should only call the methods of these:
+
+  - C
+  - An object created by `f`
+  - An object passed as an argument to `f`
+  - An object held in an instance variable of `C`
+
+- The method should not invoke methods on objects that are returned by any of the allowed functions. **In other words, talk to friends, not to strangers**
+
+- This example violates Law of Demeter because it calls the `getScratchDir()` function on the return value of `getOptions()` and then calls `getAbsolutePath()` on the return value of `getScratctDir()`:
+
+```java
+final String outputDir = ctxt.getOptions().getScratchDir().getAbsolutePath();
+```
+
+- Let's divide the above example:
+
+```java
+public void anyMethod(){
+	Options opt = ctxt.getOptions();
+    File scratchDir = opts.getScratchDir();
+    final String outputDir = scratchDir.getAbsoulutePath();
+}
+```
+
+- Certainly this functions knows that the `ctxt` object contains options which contain a scratch directory, which has an absolute path. That's a lot of knowledge for one function to know. The calling function knows how to navigate through a lot of different objects.
+- Whether this is a violation of Demeter depends on whether or not ctxt , Options , and ScratchDir are objects or data structures.
+  - If they are objects, then their internal structure should be hidden rather than exposed and so knowledge of their innards is a clear violation of the Law of Demeter.
+  - On the other hand, if ctxt, Options and ScratchDir are just data structures with no behavior, then Demeter does not apply.
+- The use of accessor functions confuses the issue. If the code had been written as follows, then we probably wouldn't be asking about Demeter violations:
+
+```java
+final String outputDir = ctxt.options.scracthDir.absolutePath;
+```
+
+- What if `ctxt, options and scrathDir` are objects with real behavior. Then because objects are supposed to hide their internal structure, we should not be able to navigate through them. To get the absolute path of the scratch directory:
+
+```java
+// we can use:
+ctxt.getAbsolutePathOfScratchDirectoryOption();
+// or
+ctxt.getScratchDirectoryOption().getAbsolutePath();
+```
+
+- The first option could lead to an explosion of methods in the `ctxt` object. 
+- The second presumes that `getScratchDirectoryOption()` returns a data structure, not an object. Neither options feels good.
+- If `ctxt` is an object, we should be telling it do something, we should not be asking it about its internals. So why did we want the absolute path of the scratch directory? What were we going to do with it? Consider this code from the same module:
+
+```java
+String outFile = outputDir + "/" + className.replace('.', '/') + ".class";
+FileOutputStream fout = new FileOutputStream(outFile);
+BufferedOutputStream bos = new BufferedOutputStream(fout);
+```
+
+- So, what if we told the `ctxt` object to do this?
+
+```java
+BufferedOutputStream bos = ctxt.createScratchFileStream(classFileName);
+```
+
+- That seems like a reasonable thing for an object to do.
+
