@@ -1621,3 +1621,135 @@ BufferedOutputStream bos = ctxt.createScratchFileStream(classFileName);
 
 - That seems like a reasonable thing for an object to do.
 
+
+
+## Exception Handling
+
+### Use Exceptions Rather Than Return Codes
+
+- Don't try to set error flag or returned an error code that the caller could check.
+
+### Provide Context with Exceptions
+
+- Each exception that we throw should provide enough context to determine the source and location of an error.
+- Create informative error messages and pass them along with your exceptions.
+
+### Define Exception Classes in Terms of  a Caller's Needs
+
+- When we define exception classes in an application, our most important concern should be **how they are caught**
+- Here is the bad example:
+
+```java
+ACMEPort port = new ACMEPort(12);
+try {
+	port.open();
+} catch (DeviceResponseException e) {
+    reportPortError(e);
+    logger.log("Device response exception", e);
+} catch (ATM1212UnlockedException e) {
+    reportPortError(e);
+    logger.log("Unlock exception", e);
+} catch (GMXError e) {
+    reportPortError(e);
+    logger.log("Device response exception");
+} finally {
+...
+}
+```
+
+- This code contains a lot of duplication.
+- We can simplify our code considerably by wrapping the API that we are calling and making sure that it returns a common exception type
+
+````java
+LocalPort port = new LocalPort(12);
+try {
+	port.open();
+} catch (PortDeviceFailure e) {
+    reportError(e);
+    logger.log(e.getMessage(), e);
+} finally {
+...
+}
+
+// LocalPort class is just a simple wrapper that catches and translates exceptions thrown by the ACMEPort class
+
+public class LocalPort {
+    private ACMEPort innerPort;
+    
+    public LocalPort(int portNumber) {
+    	innerPort = new ACMEPort(portNumber);
+    }
+    
+    public void open() {
+        try {
+            innerPort.open();
+        } catch (DeviceResponseException e) {
+            throw new PortDeviceFailure(e);
+        } catch (ATM1212UnlockedException e) {
+            throw new PortDeviceFailure(e);
+        } catch (GMXError e) {
+            throw new PortDeviceFailure(e);
+        }
+    }
+}
+````
+
+- **One final advantage of wrapping is that we aren't tied to a particular vendor's API design choice. We can define an API that we feel comfortable with**.
+- When we need different actions in try and catch block . In these cases use **Special Case Object Pattern**. In this pattern returns object represents by an Interface and 2 or more classes implements this interface. Example:
+
+```c#
+public interface IProduct
+{
+    string Name { get; set; }
+    decimal Price { get; set; }
+    string GetProductInformation();
+}
+
+public class ProductNotFound : IProduct
+{
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string GetProductInformation()
+    {
+        return "Product not found.";
+     }
+}
+
+public IProduct GetProductById(int productId)
+{
+    Product product = _productRepository.GetProductById(productId);
+    if(product == null)
+        return new ProductNotFound();
+    return product;
+}
+```
+
+- The consumer of this method doesn't have to change at all when we return a special case object the difference is the *GetProductInformation* method which will tell the user that the product is missing from the database.
+
+
+
+### Don't Return Null
+
+- This is a bad code, instead use Special Case Object Pattern.
+
+```java
+public void registerItem(Item item) {
+    if (item != null) {
+    	ItemRegistry registry = peristentStore.getItemRegistry();
+    	if (registry != null) {
+    		Item existing = registry.getItem(item.getID());
+    		if (existing.getBillingPeriod().hasRetailOwner()) {
+    			existing.register(item);
+    		}
+    	}
+    }
+}
+```
+
+
+
+### Don't Pass Null
+
+- Returning `null` from methods is bad, but passing `null` into methods is worse.
+- Unless we are working with an API which expects us to pass null, we should avoid passing `null` in our code whenever possible.
+
