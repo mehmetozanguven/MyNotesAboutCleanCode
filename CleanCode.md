@@ -1753,3 +1753,48 @@ public void registerItem(Item item) {
 - Returning `null` from methods is bad, but passing `null` into methods is worse.
 - Unless we are working with an API which expects us to pass null, we should avoid passing `null` in our code whenever possible.
 
+
+
+## Boundaries
+
+- We seldom conrol all the software in our system. Sometimes we buy third-party packages or use open source.
+- Other times we depend on teams in our own company to produce components or subsystems.
+- See the practices and techniques to keep the boundaries of our software clean
+- For example, when you use `Map` interface which is a boundary interface, because it can be any type, do not use it as an argument for other modules and avoid to return it from a function 
+
+
+
+### Learning Tests
+
+- Learning the 3rd party is hard and integrating that party to the our code is hard too.
+- Instead of experimenting and trying out the new stuff in our production code, we could write some tests to explore our understanding of the 3rd party code. This is called **learning tests**
+- With learning test, we can stays up to the with new version of 3rd party code. If update breaks our test cases, then we can find another  way or we decide to use another framework. Therefore we don't need to stay in the older versions.
+
+
+
+
+
+## Unity Tests
+
+### The Three Laws of TDD
+
+- TDD asks us to write tests first, before we write production code. Follow 3 laws:
+- **First Law**: You may not write production code until you have written a failing unit test
+- **Second Law**: You may not write more of a unit test than is sufficient to fail, and not compiling is failing.
+- **Third Law**: You may not write more production code than is sufficient to pass the currently failing test.
+- The tests and the production code are written *together* with the tests jut a few seconds ahead of the production code.
+- **Test code is just as important as production code**. It is not a second-class citizen. It requires thought, design and care. It must be kept as clean as production code.
+
+### F.I.R.S.T
+
+- Clean tests follow five other rules
+  - **Fast**: Tests should be fast. They should run quickly. When tests run slow, we don't want to run them frequently. If we don't run them frequently, we don't find problems early enough to fix them easily.
+  - **Independent**: Tests should not depend on each other. One test should not setup  the condition for others. Otherwise, one failure will cascade the all tests cases to fail.
+  - **Repeatable**: Tests should be repeatable in any environment.
+  - **Self-Validating**: The tests should have a boolean output. Either they pass or fail.
+  - **Timely**: The tests need to be written in a timely fashion. Unit tests should be written just before the production code that makes them pass
+
+
+
+- In general, tests are more important, because they preserve and enhance the flexibility, maintainability and re usability of the production code.
+
