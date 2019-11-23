@@ -1,8 +1,19 @@
 # Clean Code - A Handbook of Agile Software Craftsmanship
 
+> Written by Mehmet Ozan Güven (10.10.2019
 
 
-## What is Clean Code?
+
+# Context
+
+1. [What Clean Code does mean] (https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#what-is-clean-code)
+
+
+
+
+
+
+## What Clean Code does mean?
 
 - Elegant(zarif) and efficient code
 - Make it hard for bugs to hide
