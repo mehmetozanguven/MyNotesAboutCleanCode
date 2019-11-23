@@ -6,7 +6,7 @@
 
 # Context
 
-1. [What Clean Code does mean](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#What Clean Code does mean)
+1. [What Clean Code does mean](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#what-clean-code-does-mean)
 
 
 
