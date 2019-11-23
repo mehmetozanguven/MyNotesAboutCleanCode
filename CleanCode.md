@@ -47,7 +47,7 @@ public List<int[]> getThem() {
 	List<int[]> list1 = new ArrayList<int[]>();
 	for (int[] x : theList)
 		if (x[0] == 4)
-		list1.add(x);
+			list1.add(x);
 	return list1;
 }
 ```
@@ -76,7 +76,7 @@ public List<int[]> getThem() {
 ```java
 public static void copyChars(char a1[], char a2[]) {
 	for (int i = 0; i < a1.length; i++) {
-	a2[i] = a1[i];
+		a2[i] = a1[i];
 	}
 }
 ```
@@ -313,11 +313,11 @@ Here is the example:
 ```java
 // code 1
 public static String testableHtml(PageData pageData,boolean includeSuiteSetup) throws Exception {
-		WikiPage wikiPage = pageData.getWikiPage();
-		StringBuffer buffer = new StringBuffer();
-		if (pageData.hasAttribute("Test")) {
-			if (includeSuiteSetup) {
-				WikiPage suiteSetup = PageCrawlerImpl.getInheritedPage( SuiteResponder.SUITE_SETUP_NAME, wikiPage);
+	WikiPage wikiPage = pageData.getWikiPage();
+	StringBuffer buffer = new StringBuffer();
+	if (pageData.hasAttribute("Test")) {
+		if (includeSuiteSetup) {
+			WikiPage suiteSetup = PageCrawlerImpl.getInheritedPage( SuiteResponder.SUITE_SETUP_NAME, wikiPage);
 		if (suiteSetup != null) {
 			WikiPagePath pagePath =
 			suiteSetup.getPageCrawler().getFullPath(suiteSetup);
@@ -325,13 +325,15 @@ public static String testableHtml(PageData pageData,boolean includeSuiteSetup) t
 			buffer.append("!include -setup .").append(pagePathName).append("\n");
 		}
 	}
-	WikiPage setup = PageCrawlerImpl.getInheritedPage("SetUp", wikiPage);
+	
+    WikiPage setup = PageCrawlerImpl.getInheritedPage("SetUp", wikiPage);
 	if (setup != null) {
 		WikiPagePath setupPath = wikiPage.getPageCrawler().getFullPath(setup);
 		String setupPathName = PathParser.render(setupPath);
 		buffer.append("!include -setup .").append(setupPathName).append("\n");
 		}
 	}
+    
 	buffer.append(pageData.getContent());
 	if (pageData.hasAttribute("Test")) {
 		WikiPage teardown = PageCrawlerImpl.getInheritedPage("TearDown", wikiPage);
