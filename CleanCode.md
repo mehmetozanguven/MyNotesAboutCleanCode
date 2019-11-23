@@ -4,13 +4,24 @@
 
 
 
-# Context
+# Content
 
 1. [What Clean Code does mean](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#what-clean-code-does-mean)
+2. [Meaningful Names](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#meaningful-names)
+3. [Functions](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#functions)
+4. [Comments](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#comments)
+5. [Formatting](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#formatting)
+6. [Objects and Data Structure](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#objects-and-data-structure)
+7. [Error Handling](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#exception-handling)
+8. [Boundaries](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#boundaries)
+9. [Unit Tests](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#unit-tests)
+10. [Classes](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#classes)
+11. [Systems](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#systems)
+12. [Emergence](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#emergence)
 
 
 
-
+<br>
 
 
 ## What Clean Code does mean?
@@ -1787,7 +1798,7 @@ public void registerItem(Item item) {
 
 
 
-## Unity Tests
+## Unit Tests
 
 ### The Three Laws of TDD
 
