@@ -1798,3 +1798,138 @@ public void registerItem(Item item) {
 
 - In general, tests are more important, because they preserve and enhance the flexibility, maintainability and re usability of the production code.
 
+
+
+## Classes
+
+### Classes Should be Small
+
+- First rule is that they should be small. Second rule of classes is that they should be smaller than that.
+- But the question is "How Small?"
+  - With functions we measured size by counting physical lines.
+  - With classes we use a different measure. We count **responsibilities**
+- Here is the `SuperDashboad` class that exposes about 70 public methods. Everyone can agree with "This small is too big":
+
+````java
+// 10-1
+public class SuperDashboard extends JFrame implements MetaDataUser
+    public String getCustomizerLanguagePath()
+    public void setSystemConfigPath(String systemConfigPath)
+    public String getSystemConfigDocument()
+    public void setSystemConfigDocument(String systemConfigDocument)
+    public boolean getGuruState()
+    public boolean getNoviceState()
+    public boolean getOpenSourceState()
+    public void showObject(MetaObject object)
+    public void showProgress(String s)
+        public boolean isMetadataDirty()
+    public void setIsMetadataDirty(boolean isMetadataDirty)
+    public Component getLastFocusedComponent()
+    public void setLastFocused(Component lastFocused)
+    public void setMouseSelectState(boolean isMetadataDirty))
+//...
+````
+
+- What if we have only a few methods in that class?
+
+```java
+public class SuperDashboard extends JFrame implements MetaDataUser
+    public Component getLastFocusedComponent()
+    public void setLastFocused(Component lastFocused)
+    public int getMajorVersionNumber()
+    public int getMinorVersionNumber()
+    public int getBuildNumber()
+}
+```
+
+- Five methods isn't too much. In this case it is because despite its small number of methods, `SuperDashborad` has too many responsibilities
+- **The name of a class should describe what responsibilities it fulfills**. In fact, naming is probably the first way of helping determine class size.
+- If we can not derive a concise name for a class then it's likely too large.
+- **We should be able to write a brief description of the class in about 25 words, without using the words: `if, and, or, but`**
+- The `SuperDahsboard` provides access to the component that last held the focus and it also allows us to track the version and build numbers. `SuperDashboarda` has too many responsibilities
+
+
+
+### The Single Responsibility Principle
+
+- **The Single Responsibility Principle(SRP) states that a class or module should have one, and only one reason to change.**
+- **Classes should have one responsibility one reason to change**
+- In the `SuperDashborad` class we should extract the methods about versions into a separate class named `Version` . The `version` class is a construct that has a high potential for reuse in other applications!
+
+```java
+public class Version {
+    public int getMajorVersionNumber()
+    public int getMinorVersionNumber()
+    public int getBuildNumber()
+}
+```
+
+
+
+- Why we encounter classes that do far too many things?
+  - Because many people only focus on the getting the software to work. They are not concern about making software clean.
+  - Many of us think that we are done once the program works.
+  - At the same time, many developers fear that a large number of small, single-purpose classes makes it more difficult to understand the bigger picture. They are concerned that they must navigate from class to class in order to figure out how a larger piece of work gets accomplished.
+    - However, a system with many small classes has no more moving parts than a system with a few large classes. So the question is: Do you want your tools organized into toolboxes with many small drawers each containing well-defined and well-labeled components? Or do you want a few drawers that you just toss everything into ?
+  - Every sizable system will contain a large amount of logic and complexity. The primary goal in managing such complexity is to organize it so that a developer knows where to look to find things and need only understand the directly affected complexity at any given time.
+- In general, **we want our systems to be composed of many small classes, not a few large ones. Each small class encapsulates a single responsibility has a single reason to change and collaborates with a few others to achieve the desired system behaviors**
+
+
+
+### Cohesion
+
+- Cohesion refers all about how a single class is designed. Class should be designed with a single, well-focused purpose. 
+- For example: if we want to multiply 2 numbers and creates pop up window to displaying to them. For high cohesion, we create 2 different class(Multiply & Display). For low cohesion, one class contains all things which is bad.
+
+
+
+## Systems
+
+- How to stay clean at higher levels of abstractions?
+- **Software systems should separate the startup process, when the application objects are constructed and the dependencies are wried together, from the runtime logic that takes over after startup**
+- The **separation of concerns** is one of the oldest and most important design techniques in our craft.
+- Consider this example:
+
+```java
+public Service getService(){
+    if (service == null)
+        service = new MyServiceImpl()
+    return service;
+}
+```
+
+- This is the Lazy Initialization/Evaluation idiom, we don't incur the overhead of construction unless we actually use the object. 
+- However, we not have a hard-coded dependency on `MyServiceImpl`. We can' compile without resolving these dependencies, even if we never actually use an object of this type at runtime.
+- Testing can be a problem. If `MyServiceImpl` is a heavyweight object, we will need to make sure that an appropriate *mock object* gets assigned to the service field before this method is called during unit testing.
+- Worst of all, we do not know whether `MyServiceImpl` is the right object in all cases. Why does the class with this method have to know the global context? Is it even possible for one type to be right for all possible context?
+- If we are diligent(willing) about building well-formed and robust systems, we should never let little, convenient idioms lead to modularity breakdown.
+
+
+
+### Dependency Injection
+
+- A powerful mechanism for separating construction from use is **Dependency Injection(DI)**, the application of **Inversion of Control(IoC)** to dependency management.
+- **Inversion of Control moves secondary responsibilities from an object to other objects that are dedicated to the purpose, thereby supporting the Single Responsibility Principle**
+- In the context of dependency management, an object should not take responsibility for instantiating dependencies itself. Instead, it should pass this responsibility to another "authoritative" mechanism, thereby inverting the control.
+
+
+
+### Scaling Up
+
+- It is a myth that we can get systems "right the first time". Instead, we should implement only today's stories, then refactor and expand the system to implement new stories tomorrow. This is the essence of iterative and incremental agility. Test-driven development, refactoring and the clean code they produce make this work at the code level.
+- But what about at the system level? Doesn't the system architecture require pre-planning?
+  - **Software systems are unique compared to pyhsical systems. Their architectures can grow incrementally, if we maintain the proper separation of concerns.**
+  - the ephemeral nature of software systems makes this possible.
+
+
+
+### Test Drive The System Architecture
+
+- If we can write our application's domain logic using POJOs, decoupled from any architecture concerns at the code level, then it is possible to truly test drive our architecture.
+
+
+
+### Optimize Decision Making
+
+- Modularity and separation of concerns make decentralized management and decision making possible. In a sufficiently large system, whether it is a city or a software project, no one person can make all the decisions.
+
