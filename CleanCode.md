@@ -2072,3 +2072,136 @@ public class EUVacationPolicy extends VacationPolicy {
 - High class and method counts are sometimes the result of pointless dogmatism. For example, a coding standard that insist on creating an interface for each and every class.
 - Out goal is to keep our overall system small while we are also keeping our functions and classes small**. Remember, however, that this rule is the lowest priority of the 4 rules of Simple Design**. 
 - So although, it's important to keep class and function count low, it's more important to have tests, eliminate duplication and express yourself.
+
+
+
+## Concurrency 13
+
+### Why Concurrency?
+
+- Concurrency is a decoupling strategy. It helps us decouple "what gets done" from "when it gets done".
+- In single-threaded applications what and when are so strongly coupled.
+
+
+
+### Myths and Misconceptions About Concurrency
+
+#### Concurrency always improves performance
+
+- Concurrency can sometimes improve performance, but only when there is a lot of wait time that can be shared between multiple threads or multiple processors. Neither situation is trivial.
+
+#### Design does not change when writing concurrent programs
+
+- In fact, the design of a concurrent algorithm can be remarkably different from the design of a single-threaded system. The decoupling of what from when usually has a huge effect on the structure of the system.
+
+
+
+### Challenges
+
+- What makes concurrent programming so difficult? Consider the following trivial class
+
+```java
+public class X{
+    private int lastIdUser;
+    
+    public int getNextId(){
+        return ++lastIdUsed;
+    }
+}
+```
+
+- Let's say we create an instance of `X`, set the `lastIdUsed`  field to 42 and then share the instance between 2 threads. Now suppose that both of those thread call method `getNextd()` there are 3 possible outcomes:
+  - Thread one gets the value 43, thread two gets the value 44, lastIdUsed is 44.
+  - Thread one gets the value 44, thread two gets the value 43, lastIdUsed is 44.
+  - Thread one gets the value 43, thread two gets the value 43, lastIdUsed is 43
+- This happens because there are many possible paths that the 2 threads can take through that one line of Java code.
+
+
+
+### Concurrency Defense Principles
+
+#### Single Responsibility Principle
+
+- Keep your concurrency-related code separate from other code
+
+#### Limit the Scope of Data
+
+- Threads that modifying the same field of a shared object can interfere with each other, causing unexpected behavior. One solution is to use the `synchronized` keyword to protect a critical section in the code that uses the shared object.
+- Take data encapsulation to heart, severely limit the access of any data that may be shared.
+
+#### Use Copies of Data
+
+- A good way to avoid shared data is to avoid sharing the data in the first place. 
+- In some situations it is possible to copy objects and treat them as read-only. In other cases it might be possible to copy objects, collect results from multiple threads in these copies and then merge the results in a single thread.
+- You might be concerned about the cost of all extra object creation. It is worth experimenting to find out if this is in fact a problem.
+
+#### Thread Should Be as Independent as Possible
+
+- Consider writing threaded code such that each thread exists in its own world, sharing no data with any other thread
+- Attempt to partition data into independent subsets than can be operated on by independent threads, possibly in different processors.
+
+### Know your library
+
+- Review the classes available to you. In the case of Java, become familiar with `java.util,concurrent, java.util.concurrent.atomic, java.util.concurrent.locks`
+
+### Know your Execution Models
+
+- **Most concurrent problems you will likely encounter will be some variation of these 3 problems. Study these algorithms and write solutions using them on your own.**
+
+#### Producer-Consumer
+
+- One or more producer threads create some work and place it in a buffer or queue. One or more consumer threads acquire that work from the queue and complete it.
+- The queue between the producers and consumers is a bound resource. This means:
+  - Producers must wait for free space in the queue before writing and consumers must wait until there is something in the queue to consume.
+- Coordination between the producers and consumers via the queue involves producers and consumers signaling each other. The producers write to the queue and signal that the queue is no longer empty. Consumers read from the queue and signal that the queue is no longer full
+- The problem is both potentially wait to be notified when they can continue
+
+#### Readers-Writers
+
+- When you have a shared resource that primarily serves as a source of information for readers, but which is occasionally updated by writers.
+- Coordinating readers so they do not read something when a writer is updating and vice versa.
+- Writers tend to block many readers for a long period of time, thus causing throughput issues.
+- The problem is to balance the needs of both readers and writers to satisfy correct operation, provide reasonable throughput and avoiding starvation.
+
+#### Dining Philosophers
+
+- Imagine a number of philosophers sitting around a circular table.
+  - A fork is placed to the left of each philosopher.
+  - There is a big bowl of spaghetti in the center of the table.
+  - The philosophers spend their time thinking unless they get hungry. Once hungry they pick up he forks on either side of them and eat
+  - A philosopher cannot eat unless he is holding two forks.
+  - If the philosopher to his right of left is already using one of the forks he needs, he must wait until that philosopher finishes eating and puts the forks back down.
+  - Once a philosopher eats, he puts his forks back down on the table and waits until he is hungry again.
+- Replace philosophers with threads and forks with resources and this problem is similar to many enterprise applications in which processes compete for resources.
+- Unless carefully designed, systems that compete in this way can experience deadlock, livelock, throughput and efficiency degradation
+
+
+
+### Beware Dependencies Between Synchronized Methods
+
+- Avoid using more than one method on a shared object
+
+
+
+### Keep Synchronized Sections Small
+
+- Keep your synchronized sections as small as possible.
+- The `synchronized` keyword introduces a lock. All sections of code guarded by the same lock are guaranteed to have only one thread executing through them at any given time.
+- Locks are expensive because they create delays and add overhead. So we want to design our code with as few critical sections as possible.
+- Some naive programmers try to achieve this by making their critical sections very large. However extending synchronization beyond the minimal critical section increases contention and degrades performance.
+
+
+
+#### Writing Correct Shut-down code is hard
+
+- Think about shut-down early and get it working early. It is going to take longer than you expect. Review existing algorithms because this is probably harder than you think.
+
+
+
+### Testing Threaded Code
+
+- Write tests that have the potential to expose problems and then run them frequently, with different programatic configurations and system configurations and load. If tests ever fail, track down the failure. Don't ignore a failure just because the tests pass on a subsequent run.
+- Do not ignore system failures as one-offs
+- Do not try to solve non-threading bugs and threading bugs at the same time. Make sure your code works outside of threads.
+- Make your thread-based code especially pluggable so that you can run it in various configurations.
+- Multithreaded code behaves differently in different environments. You should run your tests in every potential deployment environment.
