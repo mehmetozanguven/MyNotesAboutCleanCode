@@ -2205,3 +2205,247 @@ public class X{
 - Do not try to solve non-threading bugs and threading bugs at the same time. Make sure your code works outside of threads.
 - Make your thread-based code especially pluggable so that you can run it in various configurations.
 - Multithreaded code behaves differently in different environments. You should run your tests in every potential deployment environment.
+
+
+
+## Smells and Heuristic 17
+
+### Comments
+
+#### C1: Inappropriate Information
+
+- In general, meta-data such as authors, last-modified-date, SPR number and so on should not appear in comments.
+- Comments should be reserved for technical notes about the code and design
+
+
+
+#### C2: Obsolete Comment
+
+- A comment that has gotten old, irrelevant and incorrect is obsolete.
+- If you find an obsolete comment, it is best to update it or get rid of it as quickly as possible.
+
+
+
+#### C3: Redundant Comment
+
+- Don't comment like this:
+
+```java
+i++; // increment i, (really? I thought that it was something else !!!)
+```
+
+
+
+#### C4: Poorly Written Comment
+
+- Think twice when you write a comment. Choose words carefully
+- Use correct grammar and punctuation.
+- Be brief
+
+
+
+#### C5: Commented-Out Code
+
+- Don't do this:
+
+```java
+public String findIBANNumber(String orderName){
+    // boolean isIBANNumberCorrect = checkIBANCorrectWithOrderName(orderName);
+    // String region = findRegionFromOrderName(orderName);
+  	// return findIBANNumber(orderName);
+    return ibanService.findIBANNumber(orderName);
+}
+```
+
+- Now:
+  - Who knows how old this comment is?
+  - Who knows whether or not it's meaningfull
+  - No one will delete it because everyone assumes someone else needs it or has plans for it.
+- When you see commented out code, **delete it**!. Don't worry, the source code control system still remembers it. If anyone really needs it, he or she can go back and check out a previous version.
+
+
+
+### Environment
+
+#### E1: Build Requires More Than One Step
+
+- You should be able to check out the system with one simple command and then issue one other simple command to build it
+
+```reStructuredText
+svn get mySystem
+cd mySystem
+ant all
+```
+
+
+
+#### E2: Tests Require More Than One Step
+
+- You should be able to run all the unit tests with just one command.
+- Being able to run all the tests is so fundamental and so important that it should be quick, easy and obvious to do.
+
+
+
+### Functions
+
+#### F1: Too Many Arguments
+
+- Functions should have a small number of arguments. 
+- No argument is best, followed by one, two and three.
+- More than three is very questionable and should be avoided
+
+
+
+#### F2: Output Arguments
+
+- Output arguments are counterintuitive.
+- If your function must change the state of something, have it change the state of the object it is called on
+
+
+
+#### F3: Flag Arguments
+
+- Boolean arguments loudly declare that the function does more than one thing.
+- They are confusing and should be eliminated.
+
+
+
+#### F4: Dead Function
+
+- Methods that are never called should be discarded.
+- Keeping dead code around is wasteful.
+
+
+
+### General
+
+#### G1: Multiple Languages in One Source File
+
+- The ideal is for a source file to contain one and only one language.
+- We should take pains to minimize both the number and extend of extra languages in our source files
+
+
+
+#### G2: Obvious Behavior Is Unimplemented
+
+- Any function or class should implement the behaviors that another programmer could reasonably expect.
+- For example, consider a function that translated the name of a day to an `enum` that represents the day.
+
+```java
+Day day = DayDate.StringToDay(String dayName);
+```
+
+- We would expect the String "Monday" to be translated to `Day.MONDAY`
+
+
+
+#### G3: Incorrect Behavior at The Boundaries
+
+- Don't rely on your intuition. Look for every boundary condition and write a test for it.
+
+
+
+#### G4: Overridden Safeties
+
+- Turning off certain compiler warnings (or all warnings) may help you get the build to succeed, but at the risk of endless debugging sessions.
+
+
+
+#### G5: Duplication
+
+- **One of the most important rules in the book**
+- Don't Repeat Yourself(DRY principle) 
+- Every time you see duplication in the code, it represents a missed opportunity for abstraction. That duplication could probably become a subroutine or perhaps another class outright. By folding the duplication into such an abstraction, you increase the vocabulary of the language of your design. Other programmers can use the abstract facilities you create. Coding becomes faster and less error phone because you have raised the abstraction level.
+- Most obvious form of duplication is when you have clumps of identical code that look like some programmers pasting the same code over and over again. These should be replaced with simple methods.
+- A more subtle form is the `switch/case` or `if/else` chain that appears again and again in various modules, always testing for the same set of conditions. These should be replaced with polymorphism.
+- Still more subtle are the modules that have similar algorithms, but that don't share similar lines of code. This is still duplication and should be addressed by using the **TEMPLATE METHOD** or **STRATEGY** pattern.
+
+
+
+#### G6: Code at Wrong Level of Abstraction
+
+- Isolating abstractions is one of the hardest things that software developers do, and there is no quick fix when you get it wrong
+- We want all the lower level concepts to be in the derivatives and all the higher level concepts to be in the base class.
+- For example, constants, variables or utility functions that correspond only to the detailed implementation should not be present in the base class.
+- Consider the following code:
+
+```java
+public interface Stack{
+    Object pop() throws EmptyException;
+    void push(Object o) throws FullException;
+    double percentFull();
+}
+class EmptyException extends Exception {}
+class FullException extends Exception {}
+```
+
+- The `percentFull` function is at the wrong level of abstraction. No one simply could not know how full they are. So the function would be better placed in a derivative interface such as `BoundedStack`. 
+- Perhaps you are thinking that the implementation could just return zero, if the stack were boundless. The problem with that is that no stack is truly boundless. You cannot really prevent an `OutOfmemoryException` by checking for 
+
+```java
+stack.percenFull() < 50.0
+```
+
+
+
+#### G7: Base Classes Depending on Their Derivatives
+
+- In general, base classes should know nothing about their derivatives.
+
+
+
+#### G8: Too Much Information
+
+- Well-defined modules have very small interfaces that allow you to do a lot with a little.
+- Poorly defined modules have wide and deep interfaces that force you to use many different gestures to get simple things done. A well-defined interface does not offer very many functions to depend upon, so coupling is low. A poorly defined interface provides lots of functions that you must call, so coupling is high
+- **Hide your data. Hide your utility functions. Hide your constants and your temporaries.**
+- **Don't create classes with lots of method or lots of instance variables.**
+- **Don't create lots of protected variables and functions for your subclasses**
+- Concentrate on keeping interfaces very tight and very small.
+
+
+
+#### G9: Dead Code
+
+- Dead code is code that isn't executed. For example: if statement that checks for a condition that can't happen or try/catch block that never throws.
+- The problem with dead code is that they will become older and older for each new version of the system. Because this dead part will never be updated with new system. 
+- Delete dead code from the systeö
+
+
+
+#### G10: Vertical Separation
+
+- Variables and function should be defined close to where they are used.
+- Local variables should be declared just above their first usage and should have limited scope.
+- We don't want local variables declared hundreds of lines distant from their usages.
+- Private functions should be defined just below their first usage. Private functions belong to the scope of the whole class, but we'd still like to limit the vertical distance between the invocations and definitions.
+
+
+
+#### G11: Inconsistency
+
+- If you do something a certain way, do all similar things in the same way.
+- For example, if particular function you use a variable named `response` to hold an `HttpServletResponse`, then use the same variable name consistently in other functions that use `HttpServletResponse` 
+
+
+
+#### G12: Clutter(Untidy)
+
+- Of what use is a default constructor with no implementation? All it serves to do is clutter up the code with meaningless artifacts. Same for variables that aren't used, functions that aren't called etc..
+- Keep your source files clean, well organized, and free of clutter.
+
+
+
+#### G13: Artificial Coupling
+
+- Things that don't depend upon each other should not be artificially coupled. 
+- For example, `enums` should not be contained within more specific classes because this forces the whole application to know about these more specific classes.
+
+
+
+#### G14: Feature Envy
+
+- The methods of a class should be interested in the variables and functions of the class they belong to, and not the variables and functions of other classes.
+- **Feature envy** is a term used to describe a situation in which one object gets at the fields of another object in order to perform some sort of computation or make a decision, rather than asking the object to do the computation itself. It is a kind of : "An object A want to know about details of another object B.".
+- However we want to eliminate Feature envy, because it exposes the internals of one class to another.
+
