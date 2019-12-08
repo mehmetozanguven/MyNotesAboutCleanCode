@@ -2449,3 +2449,353 @@ stack.percenFull() < 50.0
 - **Feature envy** is a term used to describe a situation in which one object gets at the fields of another object in order to perform some sort of computation or make a decision, rather than asking the object to do the computation itself. It is a kind of : "An object A want to know about details of another object B.".
 - However we want to eliminate Feature envy, because it exposes the internals of one class to another.
 
+
+
+#### G15: Obscured Intent
+
+- Be expressive as possible.
+- For example (don't do this):
+
+```java
+public int m_otCalc(){
+    return iThsWkd * iThsRte +
+        (int) Math.round(0.5 * iTheRte *
+                Math.max(0, iThsWdk - 400)
+             );
+}
+```
+
+
+
+#### G16: Misplaced Responsibility
+
+- One of the most important decisions a software developer can make is where to put code.
+- The principle of least surprise comes into play here. **Code should be placed where a reader would naturally expect it to be.**
+
+
+
+#### G17: Inappropriate Static
+
+- In general, you should prefer nonstatic methods to static methods. When in doubt, make the function nonstatic. If you really want a function to be static, make sure that there is no chance that you'll want it to behave polymorphically.
+- For example:
+  - `Math.max(double a, double b)` is a good static method. It does not operate on a single instance, indeed it would be silly to have to say `new Math().max(a,b)` or even `a.max(b)`. All the data not from owning object. More to point, there is almost no chance that we'd want `Math.max` to be polymorphic.
+  - Sometimes, we write static functions that should not be static. For example: `HourlyPayCalculator.calculatePay(employee, overtimeRate)`. This seem like a reasonable static function. However there is reasonable chance that we'll want this function to be polymorphic. We may wish to implement several different algorithms for calculating hourly pay, for example, `OvertimeHourlyPayCalculator` and `StraightTimeHourlyCalculator`. So in this case the function should not be static.
+
+
+
+#### G18: Use Explanatory Variables
+
+- One of the more powerful ways to make a program readable is to break the calculations up into intermediate values that are held in variables with meaningful names.
+- For example:
+
+````java
+Matcher matcher = headerPattern.matcher(line);
+if (match.find()){
+    String key = match.group(1);
+    String value = match.group(2);
+    headers.put(key.toLowerCase, value);
+}
+````
+
+- The simple use of explanatory variables makes it clear that the first matched group is the key, and the second matched group is the value.
+
+
+
+#### G19: Function Names Should Say What They Do
+
+- For example:
+
+```java
+Date newDate = date.add(5);
+```
+
+- Would you expect this to add five days to the date? Or is it weeks, or hours? You can't tell from the call what the function does.
+- If the function adds five days to the date and changes the date, then it should be called `addDaysTo` or `increaseByDays`. 
+- If on the other hand, the function returns a new data that is five days later but does not change the date instance, it should be called `daysLater` or `daysSince`
+- To sum up: If you have to look at the implementation (or documentation) of the function to know what it does, then you should work to find a better name or rearrange the functionality so that it can be placed in functions with better names.
+
+
+
+#### G20: Understand the Algorithm
+
+- Try to understand "how the code works"
+- Best way to gain this knowledge and understanding is to refactor the function into something that is so clean and expressive that it is obvious how it works.
+
+
+
+#### G21: Make Logical Dependencies Physical
+
+- If one module depends upon another, that dependency should be physical, not just logical.
+- The dependent module should not make assumptions (in other words, logical dependencies) about the module it depends upon. Rather it should explicitly ask that module for all the information it depends upon.
+- For example, imagine that you are writing a function that prints a plain text report of hours worked by employees. One class named `HourlyReporter` gathers all the data into a convenient form and then passes it to `HourlyReportFormatter` to print it.
+
+```java
+public class HourlyReporter {
+    private HourlyReportFormatter formatter;
+    private List<LineItem> page;
+    private final int PAGE_SIZE = 55;
+
+    public HourlyReporter(HourlyReportFormatter formatter) {
+        this.formatter = formatter;
+        page = new ArrayList<LineItem>();
+	}
+    
+    public void generateReport(List<HourlyEmployee> employees) {
+        for (HourlyEmployee e : employees) {
+        	addLineItemToPage(e);
+        	if (page.size() == PAGE_SIZE)
+        		printAndClearItemList();
+    	}
+        
+        if (page.size() > 0)
+        	printAndClearItemList();
+     }
+
+    private void printAndClearItemList() {
+        formatter.format(page);
+        page.clear();
+    }
+    
+    private void addLineItemToPage(HourlyEmployee e) {
+        LineItem item = new LineItem();
+        item.name = e.getName();
+        item.hours = e.getTenthsWorked() / 10;
+        item.tenths = e.getTenthsWorked() % 10;
+        page.add(item);
+    }
+}
+////////////////////    
+public class LineItem {
+    public String name;
+    public int hours;
+    public int tenths;
+ }
+
+```
+
+- This code has a logical dependency that has not been physicalized. It is the constant `PAGE_SIZE` . 
+  - Why should be `HourlyReporter` know the size of the page?
+  - Page size should be the responsibility of the `HourlyReportFormatter`
+- The fact that represents a misplaced responsibility that causes `HourlyReporter` to assume that it knows what the page size ought to be. Such an assumption is a logical dependency. `HouryReporter` depends on the fact that `HourlyReportFormatter` can deal with page sizes of 55. If some implementation of `HourlyReportFormatter` could not deal with such sizes, then there would be an error.
+- We can physicalize this dependency by creating a new method in `HourlyReportFormatter` named `getMaxPageSize()`. `HourlyReporter` will then call that function rather than using the `PAGE_SIZE` constant.
+
+
+
+#### G23: Prefer Polymorphism to If/Else or Switch/Case
+
+- Don't forget this point: "switch statements are probably appropriate in the parts of the system where adding new functions is more likely than adding new types." However the cases where functions are more volatile than types are relatively rare. Therefore you should prefer polymorphism rather than if/else or switch/case
+
+
+
+#### G24: Follow Standard Conventions
+
+- Should follow a coding standard based on common industry norms.
+
+
+
+#### G25: Replace Magic Numbers with Named Constants
+
+- For example, the number 86,400 should be hidden behind the constant `SECONDS_PER_DAY`.
+
+
+
+#### G26: Be Precise
+
+- When you make a decision in your code, make sure you make it precisely. Know why you have made it and how you will deal with any exceptions. Don't be lazy about the precision of your decisions.
+- For example:
+  - If you decide to call a function that might return null, make sure you check for `null`.
+  - If there is possibility of concurrent update, make sure you implemented some kind of locking mechanism.
+
+
+
+#### G27: Structure over Convention
+
+- No one is forced to implement the switch / case statement the same way each time; but the base classes do enforce that concrete classes have all abstract methods implemented.
+
+
+
+#### G28: Encapsulate Conditionals
+
+- Boolean logic is hard enough to understand without having to see it in the context of an `if` or `while` statement. Extract functions that explain the intent of the conditional.
+- For example, this style is better
+
+```java
+if (shouldBeDeleted(timer))
+```
+
+- than this style:
+
+```java
+if (timer.hasExpired() && !timer.isRecurrent())
+```
+
+
+
+#### G29: Avoid Negative Conditionals
+
+- Negatives are just a bit harder to understand than positives. So when possible conditionals should be expressed as positives.
+
+```java
+if (buffer.shouldCompact())
+```
+
+is preferable to
+
+```java
+if (!buffer.shouldNotCompact())
+```
+
+
+
+#### G30: Functions Should Do One Thing
+
+- It is often tempting to create functions that have multiple sections that perform a series of operations. Functions of this kind do more than one thing and should be converted into many smaller functions, each of which does one thing.
+- For example:
+
+```java
+public void pay(){
+    for (Employee e : employees){
+        if (e.isPayday()){
+            Money pay = e.calculatePay();
+            e.deliverPay(pay);
+        }
+    }
+}
+```
+
+- This bit of code does 3 things. It loops over all the employees, checks to see whether each employee ought to be paid, and then pays the employee. This code would be better written as:
+
+```java
+public void pay(){
+    for (Employee e : employees)
+        payIfNecessary(e);
+}
+
+private void payIfNecessary(Employee e){
+    if (e.isPayday())
+        calculateAndDeliverPay(e);
+}
+
+private void calculateAndDeliverType(Employee e){
+    Money pay = e.calculatePay();
+    e.deliverPay(pay);
+}
+```
+
+
+
+#### G31: Hidden Temporal Couplings
+
+- Temporal couplings are often necessary, but you should not hide the coupling.
+- Consider the following:
+
+```java
+public class MoogDiver {
+    Gradient gradient;
+    List<Spline> splines;
+    
+    public void dive(String reason) {
+        saturateGradient();
+        reticulateSplines();
+        diveForMoog(reason);
+    }
+//...
+}
+```
+
+- The order of 3 functions is important. Someone should call `reticulateSplines()` before `saturaGradient()` .
+- A better solution is:
+
+```java
+public class MoogDiver {
+    Gradient gradient;
+    List<Spline> splines;
+    public void dive(String reason) {
+        Gradient gradient = saturateGradient();
+        List<Spline> splines = reticulateSplines(gradient);
+        diveForMoog(splines, reason);
+    }
+//...
+}
+```
+
+- This exposes the temporal coupling. Each function produces a result that the next function needs, so there is no reasonable way to call them out of order.
+
+
+
+#### G32: Don't Be Arbitrary
+
+- Have a reason for the way you structure your code.
+- If a structure appears arbitrary, others will feel empowered to change it. If a structure appears consistently throughout the system, others will use it and preserve the convention.
+
+
+
+#### G33: Encapsulate Boundary Conditions
+
+- Boundary conditions are hard to keep track of. Put the processing for them in one place.
+- For example:
+
+```java
+if (level + 1 < tags.length){
+    parts = new Parse(body, level + 1, offset+endTag);
+    body = null;
+}
+```
+
+- `level+1` appears twice. This is a boundary condition that should be encapsulated within a variable named something like `nextLevel`
+
+```java
+int nextLevel = level + 1;
+if (nextLevel < tags.length){
+    parts = new Parse(body, nextLevel, offset+endTag);
+    body = null;
+}
+```
+
+
+
+#### G34: Functions Should Descend Only One Level of Abstraction
+
+- All statements of a method should belong to the same level of abstraction. If there is a statement which belongs to a lower level of abstraction, it should go to a private method which comprises statements on this level. Doing so will result in smaller methods.
+
+
+
+#### G35: Keep Configurable Data at High Levels
+
+- If you have a constant such as default or configuration value that is known and expected at a high level of abstraction, do not bury it in a low-level function.
+- Expose it as an argument to that low-level function called from the high-level function.
+- For example:
+
+```java
+public static void main(String[] args) throws Exception{
+    Arguments arguments = parseCommandLine(args);
+}
+
+////////////////////////
+
+public class Arguments{
+    public static final String DEFAULT_PATH = ".";
+    public static final String DEFAULT_ROOT = "FitNesseRoot";
+    public static final int DEFAULT_PORT = 80;
+    public static final int DEFAULT_VERSION_DAYS = 14;
+    // ...
+}
+```
+
+- The command-line arguments are parsed in the very first executable line.
+- The default values of those arguments are specified at the top of the `Argument` class.
+- Someone don't have to go looking in low levels  of the system for statement like this one:
+
+```java
+if (arguments.port == 0) // use 80 by default
+```
+
+- The configuration constants reside at a very high level and are easy to change. They get passed down to the rest of the application. The lower levels of the application do not own the values of these constants.
+
+
+
+#### G36: Avoid Transitive Navigation
+
+- In general, we don't want a single module to know much about its collaborators. More specifically, if `A` collaborates with `B` and `B` collaborates with `C`, we don't want modules that use `A` to know about `C`. (For example, we don't want `a.getB().getC().doSomething();`)
+- If many modules used some form of the statement `a.getB().getC()` then it would be difficult to change the design and architecture to put a `Q` between `B` and `C`. You'd have to find every instance of `a.getB().getC()` and convert it to `a.getB().getQ().getC()`
+- Rather we want our immediate collaborators to offer all the services we need.
