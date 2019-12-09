@@ -7,17 +7,19 @@
 # Content
 
 1. [What Clean Code does mean](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#1-what-clean-code-does-mean)
-2. [Meaningful Names](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#meaningful-names)
-3. [Functions](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#functions)
-4. [Comments](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#comments)
-5. [Formatting](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#formatting)
-6. [Objects and Data Structure](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#objects-and-data-structure)
-7. [Error Handling](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#exception-handling)
-8. [Boundaries](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#boundaries)
-9. [Unit Tests](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#unit-tests)
-10. [Classes](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#classes)
-11. [Systems](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#systems)
-12. [Emergence](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#emergence)
+2. [Meaningful Names](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#2-meaningful-names)
+3. [Functions](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#3-functions)
+4. [Comments](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#4-comments)
+5. [Formatting](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#5-formatting)
+6. [Objects and Data Structure](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#6-objects-and-data-structure)
+7. [Error Handling](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#7-exception-handling)
+8. [Boundaries](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#8-boundaries)
+9. [Unit Tests](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#9-unit-tests)
+10. [Classes](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#10-classes)
+11. [Systems](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#11-systems)
+12. [Emergence](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#12-emergence)
+13. [Concurrency](https://github.com/mehmetozanguven/MyNotesAboutCleanCode/blob/master/CleanCode.md#12-concurrency)
+14. [Smells and Heuristic](https://github.com/mehmetozanguven/MyNotesAboutCleanCode/blob/master/CleanCode.md#17-smells-and-heuristic)
 
 
 
@@ -41,7 +43,7 @@
 
 
 
-## Meaningful Names
+## 2. Meaningful Names
 
 ### 1. Use Intention-Revealing Names
 
@@ -322,7 +324,7 @@ public class GuessStatisticsMessage {
 
 
 
-## Functions
+## 3. Functions
 
 - **The first rule of functions is that they should be small.**
 - **The second rule of functions is that they should be smaller than that.** 
@@ -764,7 +766,7 @@ private void logError(Exception e){
 
 
 
-## Comments
+## 4. Comments
 
 - When we find ourselves in a position where we need to write a comment, think it through and see whether there isn't some way to turn the tables and express ourselves in code.
 
@@ -1215,7 +1217,7 @@ public class PrimeGenerator{
 
 
 
-## Formatting
+## 5. Formatting
 
 - Take care your code is nicely formatted
 - Choose a set of simple rules that govern the format of your code. Then consistently apply those rules
@@ -1470,7 +1472,7 @@ public class CodeAnalyzer implements JavaFileAnalysis {
 
 
 
-## Objects And Data Structure
+## 6. Objects And Data Structure
 
 - Hiding implementation is about abstractions!
 - A class does not simply push its variables out through getters and setter. Rather it exposes abstract interfaces that allow its users to manipulate the essence of the data (data itself), without having to know its implementation
@@ -1647,7 +1649,7 @@ BufferedOutputStream bos = ctxt.createScratchFileStream(classFileName);
 
 
 
-## Exception Handling
+## 7. Exception Handling
 
 ### Use Exceptions Rather Than Return Codes
 
@@ -1779,7 +1781,7 @@ public void registerItem(Item item) {
 
 
 
-## Boundaries
+## 8. Boundaries
 
 - We seldom conrol all the software in our system. Sometimes we buy third-party packages or use open source.
 - Other times we depend on teams in our own company to produce components or subsystems.
@@ -1798,7 +1800,7 @@ public void registerItem(Item item) {
 
 
 
-## Unit Tests
+## 9. Unit Tests
 
 ### The Three Laws of TDD
 
@@ -1824,7 +1826,7 @@ public void registerItem(Item item) {
 
 
 
-## Classes
+## 10. Classes
 
 ### Classes Should be Small
 
@@ -1907,7 +1909,7 @@ public class Version {
 
 
 
-## Systems
+## 11. Systems
 
 - How to stay clean at higher levels of abstractions?
 - **Software systems should separate the startup process, when the application objects are constructed and the dependencies are wried together, from the runtime logic that takes over after startup**
@@ -1959,7 +1961,7 @@ public Service getService(){
 
 
 
-## Emergence
+## 12. Emergence
 
 - Follow 4 rules for good design software/architecture:
   1. Runs all the tests
@@ -2075,7 +2077,7 @@ public class EUVacationPolicy extends VacationPolicy {
 
 
 
-## Concurrency 13
+## 13. Concurrency
 
 ### Why Concurrency?
 
@@ -2208,7 +2210,7 @@ public class X{
 
 
 
-## Smells and Heuristic 17
+## 14. Smells and Heuristic 
 
 ### Comments
 
