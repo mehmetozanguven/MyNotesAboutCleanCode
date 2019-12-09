@@ -6,7 +6,7 @@
 
 # Content
 
-1. [What Clean Code does mean](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#what-clean-code-does-mean)
+1. [What Clean Code does mean](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#1-what-clean-code-does-mean)
 2. [Meaningful Names](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#meaningful-names)
 3. [Functions](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#functions)
 4. [Comments](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#comments)
