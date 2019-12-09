@@ -18,8 +18,8 @@
 10. [Classes](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#10-classes)
 11. [Systems](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#11-systems)
 12. [Emergence](https://github.com/mehmetozanguven/cleanCodeNotes/blob/master/CleanCode.md#12-emergence)
-13. [Concurrency](https://github.com/mehmetozanguven/MyNotesAboutCleanCode/blob/master/CleanCode.md#12-concurrency)
-14. [Smells and Heuristic](https://github.com/mehmetozanguven/MyNotesAboutCleanCode/blob/master/CleanCode.md#17-smells-and-heuristic)
+13. [Concurrency](https://github.com/mehmetozanguven/MyNotesAboutCleanCode/blob/master/CleanCode.md#13-concurrency)
+14. [Smells and Heuristic](https://github.com/mehmetozanguven/MyNotesAboutCleanCode/blob/master/CleanCode.md#14-smells-and-heuristic)
 
 
 
