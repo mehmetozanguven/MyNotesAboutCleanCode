@@ -1,6 +1,6 @@
 # Clean Code - A Handbook of Agile Software Craftsmanship
 
-> Written by Mehmet Ozan Güven (10.10.2019
+> Notes taken by Mehmet Ozan Güven (10.10.2019 - 09.12.2019)
 
 
 
@@ -24,7 +24,7 @@
 <br>
 
 
-## What Clean Code does mean?
+## 1. What Clean Code does mean?
 
 - Elegant(zarif) and efficient code
 - Make it hard for bugs to hide
@@ -2799,3 +2799,235 @@ if (arguments.port == 0) // use 80 by default
 - In general, we don't want a single module to know much about its collaborators. More specifically, if `A` collaborates with `B` and `B` collaborates with `C`, we don't want modules that use `A` to know about `C`. (For example, we don't want `a.getB().getC().doSomething();`)
 - If many modules used some form of the statement `a.getB().getC()` then it would be difficult to change the design and architecture to put a `Q` between `B` and `C`. You'd have to find every instance of `a.getB().getC()` and convert it to `a.getB().getQ().getC()`
 - Rather we want our immediate collaborators to offer all the services we need.
+
+
+
+### JAVA
+
+#### J1: Avoid Long Import Lists by Using Wildcards
+
+- If you use 2 or more classes from a package, then import the whole package with `import package.*;`
+
+
+
+#### J2: Don't Inherit Constant
+
+- A programmer puts some constants in an interface and then gains access to those constants by inheriting that interface. Don't do that.
+- Example:
+
+```java
+public class HourlyEmployee extends Employee{
+    private int tenthsWorked;
+    private double hourlyRate;
+    
+    public Money calculatePay(){
+        int straightTime = Math.min(tenthsWorked, TENTHS_PER_WEEK);
+		int overTime = tenthsWorked - straightTime;
+		return new Money(
+			hourlyRate * (tenthsWorked + OVERTIME_RATE * overTime)
+    }
+}
+```
+
+- Where did the contansts `TENTHS_PER_WEEK` and `OVERTIME_RATE` come from?
+
+```java
+public abstract class Employee implements PayrollConstants {
+    public abstract boolean isPayday();
+    public abstract Money calculatePay();
+    public abstract void deliverPay(Money pay);
+}
+```
+
+- It is not in the Employee class
+
+```java
+public interface PayrollConstants {
+    public static final int TENTHS_PER_WEEK = 400;
+    public static final double OVERTIME_RATE = 1.5;
+}
+```
+
+- This is not good practice. Use a static import instead:
+
+```java
+import static PayrollConstants.*;
+public class HourlyEmployee extends Employee{
+    private int tenthsWorked;
+    private double hourlyRate;
+    
+    public Money calculatePay(){
+        int straightTime = Math.min(tenthsWorked, TENTHS_PER_WEEK);
+		int overTime = tenthsWorked - straightTime;
+		return new Money(
+			hourlyRate * (tenthsWorked + OVERTIME_RATE * overTime)
+    }
+}
+```
+
+
+
+#### J3: Constants versus Enums
+
+- Use enums!
+- Don't keep using the old trick of `public static final int`s . The meaning of ints can get lost.
+
+
+
+### Names
+
+#### N1: Choose Descriptive Names
+
+- Don't be too quick to choose a name.
+- Make sure the name is descriptive.
+- This is not just a "feel-good" recommendation. Names in software are 90 percent of what make software readable.
+
+
+
+#### N2: Choose Names at the Appropriate Level of Abstraction
+
+- Don't pick names that communicate implementation, choose names the reflect the level of abstraction of the class or function you are working in.
+- Consider the Modem interface:
+
+```java
+public interface Modem{
+    boolean dial(String phoneNumber);
+    boolean disconnect();
+    boolean send(char c);
+    char recv();
+    String getConnectedPhoneNumber();
+}
+```
+
+- At first this look fine. The functions all seem appropriate. Indeed, for many applications they are. But now consider an application in which some modems aren't connected by dial-ling. Rather they are connected permanently by hard wiring(think of it like Ethernet). Perhaps some are connected by sending a port number to a switch over a USB connection. A better naming strategy for this scenario might be:
+
+```java
+public interface Modem{
+    boolean connect(String connectionLocator);
+    boolean disconnect();
+    boolean send(char c);
+    char recv();
+    String getConnectedLocator();
+}
+```
+
+- Now the names don't make any commitments about phone numbers. They can still be used for phone numbers, or they could be used for any other kind of connection strategy.
+
+
+
+#### N3: Use Standard Terminology Where Possible
+
+- Names are easier to understand if they are based on existing convention or usage.
+- Follow your team name standard as possible.
+
+
+
+#### N4: Unambiguous Names
+
+- Choose names that make the working of  a function or variable unambiguous. For example:
+
+```java
+private String doRename() throws Exception{
+    if (refactorReferences)
+        renameReferences();
+    renamePage();
+    //...
+}
+```
+
+- The name of the function does not say what the function does except in broad and vague terms. And also there is functional call named `renamePage()` in the function `doRename()`. Who can say the differences between `renamePage()` and `doRename()` ?
+- A better name for that function is `renamePageAndOptionallyAllReferences`. This may seem long and it is, but it's only called from one place in the module.
+
+
+
+#### N5: Use Long Names for Long Scopes
+
+- The length of a name should be related to the length of the scope.
+- You can use very short variable names for tiny scopes, but for big scope you should use longer names.
+
+
+
+#### N6: Avoid Encodings
+
+- Names should not be encoded with type or scope information.
+- Prefixes such as `m_` or `f` are useless
+- Also project and/or subsystem encodings such as `vis_` (for visual imaging system) are distracting and redundant.
+
+
+
+#### N7: Names Should Describe Side-Effects
+
+- Names should describe everything that a function, variable, or class is or does. Don't hide side effects with a name. For example:
+
+```java
+public ObjectOutputStream getOos() throws IOException{
+    if (m_oos == null){
+        m_oss = new ObjectOutputStream(m_socket.getOutputStream());
+    }
+    return m_oss;
+}
+```
+
+- This function does a bit more than get an "oss"; it creates the oss if it hasn't been created already. Thus, a better name might be `createOrReturnOos`
+
+
+
+### Tests
+
+#### T1: Insufficient Tests
+
+- How many tests should be in a test suite?
+- Unfortunately, the metric many programmers use "That seems like enough". 
+- A test suite should test everything that could possibly break.
+
+
+
+#### T2: Use a Coverage Tool
+
+- Coverage tools reports gaps in your testing strategy.
+- They make it easy to find modules, classes, and functions that are insufficiently tested.
+
+
+
+#### T3: Don't Skip Trivial Tests
+
+- They are easy to write. 
+
+
+
+#### T4: An Ignored Test Is a Question about an Amubiguity
+
+
+
+#### T5: Test Boundary Conditions
+
+- Take special care to test boundary conditions.
+
+
+
+#### T6: Exhaustively Test Near Bugs
+
+- When you find a bug in a function, it is wise to do an exhaustive test of that function. You'll probably find that the bug was not alone.
+
+
+
+#### T7: Patterns of Failure Are Revealing
+
+- Sometimes you can diagnose a problem by finding patterns in the way the test cases fail. This is another argument for making the test cases as complete as possible. Complete test cases, ordered in a reasonable way.
+
+
+
+#### T8: Test Coverage Patterns Can be Revealing
+
+
+
+#### T9: Tests Should be Fast
+
+
+
+
+
+## Conclusion
+
+- You don't become a software craftsman by learning a list of heuristics or reading this book. Professionalism and craftsmanship come from values that drive disciplines.
+
